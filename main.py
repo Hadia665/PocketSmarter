@@ -112,11 +112,11 @@ if 'username' not in st.session_state:
         auth_tab=st.session_state.get('auth_tab','login')
         if auth_tab=='signup':
             st.markdown("## Sign Up")
-            firstName=st.text_input("Sign_FirstName")
-            lastName=st.text_input("Sign_LastName")
-            Susername=st.text_input("Sign_UserName")
-            Spassword=st.text_input("Sign_Password",type="password")
-            Cpassword=st.text_input("Sign_ConfirmPassword",type="password")
+            firstName=st.text_input("FirstName")
+            lastName=st.text_input("LastName")
+            Susername=st.text_input("UserName")
+            Spassword=st.text_input("Password",type="password")
+            Cpassword=st.text_input("ConfirmPassword",type="password")
             if st.button("SignUp"):
                 result=signup(firstName,lastName,Susername,Spassword,Cpassword)
                 if result=="Signup Successful!":
@@ -130,8 +130,8 @@ if 'username' not in st.session_state:
                 st.rerun()
         else:
             st.markdown("## Login")
-            Lusername=st.text_input("Login_UserName")
-            Lpassword=st.text_input("Login_Password",type="password")
+            Lusername=st.text_input("Login UserName")
+            Lpassword=st.text_input("Login Password",type="password")
             if st.button("Login"):
                 result=login(Lusername,Lpassword)
                 if result=="Login Successful":
@@ -149,10 +149,10 @@ elif 'username' in st.session_state:
                 startDate=datetime.strptime(budget[2],'%Y-%m-%d').date()
                 today=date.today()
                 daysPassed=(today-startDate).days
-                #if daysPassed>=days:
-                    #st.session_state['expense_list']=[]
-                    #st.session_state['page']='expenses'
-                    #st.rerun()
+                if daysPassed>=days:
+                    st.session_state['expense_list']=[]
+                    st.session_state['page']='expenses'
+                    st.rerun()
         if st.button("← Back"):
             st.session_state['page']=None
             st.rerun()
