@@ -17,7 +17,7 @@ def removeItem(username,name):
 def checkandUpdate(username):
     saved=getSaved(username)
     if saved==0:
-        saved=calculateSaved(username)
+        return
     wishlist=getWishList(username)
     if len(wishlist)==0:
         return
