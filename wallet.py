@@ -1,29 +1,17 @@
-import csv
-import os
+from database import supabase
 def addtoWallet(username,amount):
-    rows=[]
-    updated=False
-    if os.path.exists('Wallet.csv'):
-        with open('Wallet.csv','r',newline='') as file:
-            reader=csv.reader(file)
-            for row in reader:
-                if row[0]==username:
-                    newTotal=float(row[1])+float(amount)
-                    rows.append([username,newTotal])
-                    updated=True
-                else:
-                    rows.append(row)
-    if not updated:
-        rows.append([username,amount])
-    with open ('Wallet.csv','w',newline='') as file:
-        writer=csv.writer(file)
-        writer.writerows(rows) 
+    existing=supabase.table('wallet').select('*').eq('username', username).execute()
+    if existing.data:
+        currentTotal=float(existing.data[0]['total_saved'])
+        newTotal=currentTotal+float(amount)
+        supabase.table('wallet').update({'total_saved':newTotal}).eq('username',username).execute()
+    else:
+        supabase.table('wallet').insert({
+            'username':username,
+            'total_saved':amount
+        }).execute()
 def getWallet(username):
-    if not os.path.exists('Wallet.csv'):
-        return 0
-    with open ('Wallet.csv','r',newline='') as file:
-        reader=csv.reader(file)
-        for row in reader:
-            if row[0]==username:
-                moneySaved=row[1]
-                return moneySaved
+    result=supabase.table('wallet').select('total_saved').eq('username', username).execute()
+    if result.data:
+        return float(result.data[0]['total_saved'])
+    return 0

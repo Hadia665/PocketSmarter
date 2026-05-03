@@ -1,8 +1,6 @@
-import os
-import csv
-from budget import getExpenseList,calculateSaved,getBudget,getSaved
+from database import supabase
+from budget import calculateSaved,getBudget,getSaved,updateSaved
 from wallet import addtoWallet,getWallet
-from budget import updateSaved
 def submitExpenses(username,extraadded,extraminus):
     saved=getSaved(username)
     if saved==0:
@@ -10,10 +8,10 @@ def submitExpenses(username,extraadded,extraminus):
     saved=saved+extraadded
     saved=saved-extraminus
     if saved<0:
-        walletVal=float(getWallet(username)or 0)
-        wallet=walletVal+saved
-        addtoWallet(username,wallet)
+        walletVal=float(getWallet(username) or 0)
+        newWallet=walletVal+saved
+        supabase.table('wallet').update({'total_saved': newWallet
+        }).eq('username',username).execute()
         saved=0
     updateSaved(username,saved)
     return saved
-

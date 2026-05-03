@@ -1,46 +1,38 @@
-import csv
-import os
+import hashlib
+from database import supabase
 from datetime import date
 def setBudget(username,days,totalAmount):
-    rows=[]
-    updated=False
-    if os.path.exists('budget.csv'):
-        with open('budget.csv','r',newline='') as file:
-            reader=csv.reader(file)
-            for row in reader:
-                if row[0]==username:
-                    startDate=str(date.today())
-                    rows.append([username,days,totalAmount,startDate])
-                    updated=True
-                else:
-                    rows.append(row)
-    if not updated:
-        startDate=str(date.today())
-        rows.append([username,days,totalAmount,startDate])
-    with open ('budget.csv','w',newline='') as file:
-        writer=csv.writer(file)
-        writer.writerows(rows)
+    existing=supabase.table('budget').select('*').eq('username',username).execute()
+    startDate=str(date.today())
+    if existing.data:
+        supabase.table('budget').update({
+            'days':days,
+            'total_amount':totalAmount,
+            'start_date':startDate}).eq('username',username).execute()
+    else:
+        supabase.table('budget').insert({
+            'username':username,
+            'days':days,
+            'total_amount':totalAmount,
+            'start_date':startDate}).execute()
 def getBudget(username):
-    if not os.path.exists('budget.csv'):
-        return None
-    with open ('budget.csv','r',newline='') as file:
-        reader=csv.reader(file)
-        for row in reader:
-            if row[0]==username:
-                return row[1],row[2],row[3] if len(row)>3 else None
+    result=supabase.table('budget').select('*').eq('username',username).execute()
+    if result.data:
+        row=result.data[0]
+        return row['days'],row['total_amount'],row['start_date']
+    return None
 def addExpense(username,expenseName,expenseamount):
-    with open('expense.csv','a',newline='') as file:
-        writer=csv.writer(file)
-        writer.writerow([username,expenseName,expenseamount])
+    supabase.table('expenses').insert({
+        'username':username,
+        'expense_name':expenseName,
+        'expense_amount':expenseamount
+    }).execute()
 def getexpense(username):
-    totalexpense=0
-    if os.path.exists('expense.csv'):
-        with open('expense.csv','r',newline='') as file:
-            reader=csv.reader(file)
-            for row in reader:
-                if row[0]==username:
-                    totalexpense+=float(row[2])
-    return totalexpense
+    result=supabase.table('expenses').select('expense_amount').eq('username',username).execute()
+    total=0
+    for row in result.data:
+        total+=float(row['expense_amount'])
+    return total
 def calculateSaved(username):
     budget = getBudget(username)
     if budget is None:
@@ -50,37 +42,19 @@ def calculateSaved(username):
     saved = float(totalAmount) - totalExpense
     return saved
 def getExpenseList(username):
+    result=supabase.table('expenses').select('*').eq('username',username).execute()
     expenses=[]
-    if os.path.exists('expense.csv'):
-        with open('expense.csv','r',newline='') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if row[0] == username:
-                    expenses.append([row[1],row[2]])
+    for row in result.data:
+        expenses.append([row['expense_name'],row['expense_amount']])
     return expenses    
 def updateSaved(username,amount):
-    rows=[]
-    updated=False
-    if os.path.exists('saved.csv'):
-        with open('saved.csv','r',newline='') as file:
-            reader=csv.reader(file)
-            for row in reader:
-                if row[0]==username:
-                    rows.append([username,amount])
-                    updated=True
-                else:
-                    rows.append(row)
-    if not updated:
-        rows.append([username,amount])
-    with open ('saved.csv','w',newline='') as file:
-        writer=csv.writer(file)
-        writer.writerows(rows)
+    existing=supabase.table('saved').select('*').eq('username',username).execute()
+    if existing.data:
+        supabase.table('saved').update({'amount': amount}).eq('username', username).execute()
+    else:
+        supabase.table('saved').insert({'username': username, 'amount': amount}).execute()
 def getSaved(username):
-    if not os.path.exists('saved.csv'):
-        return 0
-    with open('saved.csv', 'r', newline='') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            if row[0] == username:
-                return float(row[1])
+    result = supabase.table('saved').select('amount').eq('username',username).execute()
+    if result.data:
+        return float(result.data[0]['amount'])
     return 0

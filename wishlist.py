@@ -1,32 +1,19 @@
-import csv
-import os
-from budget import getSaved,updateSaved,calculateSaved
+from database import supabase
+from budget import getSaved, updateSaved, calculateSaved
 def addwishlist(username,name,price,priority):
-    with open('Wishlist.csv','a',newline='') as file:
-        writer=csv.writer(file)
-        writer.writerow([username,name,price,priority])
+    supabase.table('wishlist').insert({'username': username,'item_name': name,'price': price,'priority': priority
+    }).execute()
 def getWishList(username):
+    result=supabase.table('wishlist').select('*').eq('username', username).execute()
     wishlist=[]
-    if os.path.exists('Wishlist.csv'):
-        with open('Wishlist.csv','r',newline='') as file:
-            reader = csv.reader(file)
-            for row in reader:
-                if row[0] == username:
-                    wishlist.append([row[1],row[2],row[3]])
-    return wishlist         
+    for row in result.data:
+        wishlist.append([row['item_name'],row['price'],row['priority']])
+    return wishlist
 def updatePriority(username,name,price,priority):
-    rows=[]
-    if os.path.exists('Wishlist.csv'):
-        with open('Wishlist.csv','r',newline='') as file:
-            reader=csv.reader(file)
-            for row in reader:
-                if row[0]==username and row[1]==name:
-                    rows.append([username,name,price,priority])
-                else:
-                    rows.append(row)
-    with open ('Wishlist.csv','w',newline='') as file:
-        writer=csv.writer(file)
-        writer.writerows(rows)
+    supabase.table('wishlist').update({'priority': priority
+    }).eq('username',username).eq('item_name',name).execute()
+def removeItem(username,name):
+    supabase.table('wishlist').delete().eq('username',username).eq('item_name',name).execute()
 def checkandUpdate(username):
     saved=getSaved(username)
     if saved==0:
@@ -41,16 +28,3 @@ def checkandUpdate(username):
         saved=saved-firstprice
         removeItem(username,wishlist[0][0])
         updateSaved(username,saved)
-def removeItem(username,name):
-    rows=[]
-    if os.path.exists('Wishlist.csv'):
-        with open('Wishlist.csv','r',newline='') as file:
-            reader=csv.reader(file)
-            for row in reader:
-                if row[0]==username and row[1]==name:
-                    pass
-                else:
-                    rows.append(row)
-    with open('Wishlist.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(rows)

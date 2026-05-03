@@ -6,33 +6,105 @@ from wishlist import addwishlist,getWishList,updatePriority,checkandUpdate,remov
 from expense import submitExpenses
 from prediction import predictSpending,predictWishList,predictSpendingGraph
 import matplotlib.pyplot as plt
-import os
-import csv
 from datetime import date,datetime
+from database import supabase
+st.set_page_config(page_title="Pocket Smarter", layout="wide")
+st.markdown("""
+<style>.stApp {background-color: #F8F9FA;}
+h1, h2, h3 {color: #2C3E50;}
+.stButton>button {
+    background-color: #6C9BCF;
+    color: white;
+    border-radius: 12px;
+    padding: 10px 18px;
+    border: none;
+    transition: 0.3s;
+    font-weight:500;
+}
+.stButton>button:hover {
+    transform: scale(1.05);
+    background-color:#5B8ABE;
+}
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: 0.3s;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+input, .stTextInput>div>div>input {
+    border-radius: 10px !important;
+}
+[data-testid="stMetric"] {
+    background: white;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+</style> """, unsafe_allow_html=True)
+st.set_page_config(
+    page_title="PocketSmarter",
+    page_icon="logo.png",
+    layout="wide"
+)
 if 'username' not in st.session_state:
     if st.session_state.get('show_auth')!=True:
-        st.markdown("""
-            <h1 style='text-align: center;
-                color:#1D1C15;'>Pocket Smarter</h1>
-            <p style='text-align:center;
-                color:grey;'>Smart Money Managment</p>
-            <hr>
-                """,unsafe_allow_html=True)
-        st.markdown("---")
-        st.markdown("### Features")
-        st.write("Track your fixed expenses")
-        st.write("Smart savings Wallet")
-        st.write("AI spending predictions")
-        st.write("Period based budgeting")
-        st.markdown("---")
-        col1,col2=st.columns(2)
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            subcol1, subcol2 = st.columns([1, 3])
+            with subcol1:
+                st.image("logo.png", width=70)
+            with subcol2:
+                st.markdown("""
+                    <h1 style='color:#2C3E50; font-size:48px; margin:0; padding-top:5px;'>PocketSmarter</h1>
+                """, unsafe_allow_html=True)
+            st.markdown("""
+                    <p style='color:#7F8C8D; font-size:20px; text-align:center;'>Smart Money Management for Students</p>
+            """, unsafe_allow_html=True)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            if st.button("Login",use_container_width=True):
+            st.markdown("""
+            <div style='background:white; padding:20px; border-radius:12px; 
+            box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:center;'>
+                <b>Track Expenses</b>
+                <p style='color:gray; font-size:13px;'>Monitor every penny</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown("""
+            <div style='background:white; padding:20px; border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:center;'>
+                <b>Smart Savings</b>
+                <p style='color:gray; font-size:13px;'>Auto savings wallet</p>
+             </div>
+            """, unsafe_allow_html=True)
+        with col3:
+            st.markdown("""
+            <div style='background:white; padding:20px; border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:center;'>
+                <b>Wish List</b>
+                <p style='color:gray; font-size:13px;'>Save for your goals</p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col4:
+            st.markdown("""
+            <div style='background:white; padding:20px; border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08); text-align:center;'>
+                <b>AI Predictions</b>
+                <p style='color:gray; font-size:13px;'>ML powered insights</p>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        col1,col2,col3=st.columns([1,2,1])
+        with col2:
+            if st.button(" Login", use_container_width=True):
                 st.session_state['show_auth']=True
                 st.session_state['auth_tab']='login'
                 st.rerun()
-        with col2:
-            if st.button("Sign Up",use_container_width=True):
+            if st.button(" Sign Up", use_container_width=True):
                 st.session_state['show_auth']=True
                 st.session_state['auth_tab']='signup'
                 st.rerun()
@@ -77,10 +149,10 @@ elif 'username' in st.session_state:
                 startDate=datetime.strptime(budget[2],'%Y-%m-%d').date()
                 today=date.today()
                 daysPassed=(today-startDate).days
-                if daysPassed>=days:
-                    st.session_state['expense_list']=[]
-                    st.session_state['page']='expenses'
-                    st.rerun()
+                #if daysPassed>=days:
+                    #st.session_state['expense_list']=[]
+                    #st.session_state['page']='expenses'
+                    #st.rerun()
         if st.button("← Back"):
             st.session_state['page']=None
             st.rerun()
@@ -134,17 +206,9 @@ elif 'username' in st.session_state:
                 with col2:
                     st.write(f"Rs. {exp[1]}")
                 with col3:
-                    if st.button("delete",key="del_"+exp[0]):
+                    if st.button("delete", key="del_"+exp[0]):
                         st.session_state['expense_list'].remove(exp)
-                        rows=[]
-                        with open('expense.csv','r',newline='') as f:
-                            reader=csv.reader(f)
-                            for row in reader:
-                                if not (row[0]==U and row[1]==exp[0]):
-                                    rows.append(row)
-                        with open('expense.csv','w',newline='') as f:
-                            writer=csv.writer(f)
-                            writer.writerows(rows)
+                        supabase.table('expenses').delete().eq('username', U).eq('expense_name', exp[0]).execute()
                         st.rerun()
             st.markdown("---")
             saved=calculateSaved(U)
@@ -214,22 +278,14 @@ elif 'username' in st.session_state:
                 with col4:
                     if diff>=0:
                         st.success(f"Can buy!")
-                        if st.button("Bought it!",key="buy_"+item[0]):
-                            walletVal=float(getWallet(U) or 0)
-                            newWallet=walletVal-float(item[1])
-                            rows=[]
-                            with open ('Wallet.csv','r',newline='') as f:
-                                reader=csv.reader(f)
-                                for row in reader:
-                                    if row[0]==U:
-                                        rows.append([U,newWallet])
-                                    else:
-                                        rows.append(row)
-                            with open('Wallet.csv','w',newline='') as f:
-                                writer=csv.writer(f)
-                                writer.writerows(rows)
-                            removeItem(U,item[0])
-                            st.success(f"Congrats! {item[0]} purchased")
+                        if st.button("Bought it!", key="buy_"+item[0]):
+                            walletVal = float(getWallet(U) or 0)
+                            newWallet = walletVal - float(item[1])
+                            supabase.table('wallet').update({
+                                'total_saved': newWallet
+                            }).eq('username', U).execute()
+                            removeItem(U, item[0])
+                            st.success(f"Congrats! {item[0]} purchased!")
                             st.rerun()
                     else:
                         st.write(f"Rs. {abs(diff):.0f} needed")
@@ -241,7 +297,7 @@ elif 'username' in st.session_state:
         if st.button("← Back"):
             st.session_state['page']=None
             st.rerun()
-        st.markdown("Daily Expenses")
+        st.markdown("### Daily Expenses")
         st.markdown("---")
         U=st.session_state['username']
         expenses=getExpenseList(U)
@@ -266,74 +322,85 @@ elif 'username' in st.session_state:
                 st.rerun()
             st.markdown("---")
             if st.button("Move to Wallet"):
-                saved=getSaved(U)
-                addtoWallet(U,saved)
-                updateSaved(U,0)
-                if os.path.exists('expense.csv'):
-                    rows=[]
-                    with open('expense.csv','r',newline='') as f:
-                        reader=csv.reader(f)
-                        for row in reader:
-                            if row[0]!=U:
-                                rows.append(row)
-                    with open('expense.csv','w',newline='')as f:
-                        writer=csv.writer(f)
-                        writer.writerows(rows)
-                st.session_state['expense_list']=[]
-                st.session_state['page']='setup'
+                saved = getSaved(U)
+                addtoWallet(U, saved)
+                updateSaved(U, 0)
+                supabase.table('expenses').delete().eq('username', U).execute()
+                st.session_state['expense_list'] = []
+                st.session_state['page'] = 'setup'
                 st.rerun()
     elif st.session_state.get('page')=='predictions':
         if st.button("← Back"):
             st.session_state['page']=None
             st.rerun()
-        st.markdown("## Prediction")
+        st.markdown("##  Predictions")
         st.markdown("---")
         U=st.session_state['username']
-        col1,col2=st.columns(2)
-        with col1:
+        tab1,tab2,tab3=st.tabs([
+            " Spending Forecast",
+            " Wishlist Timeline", 
+            " Savings Analysis"
+        ])
+        with tab1:
             predicted=predictSpending(U)
             budget=getBudget(U)
             if budget:
                 totalAmount=float(budget[1])
-                if predicted>totalAmount:
-                    st.error(f"Predicted: Rs. {predicted} You may overspend")
+                col1,col2=st.columns(2)
+                with col1:
+                    st.metric("Predicted Spending",f"Rs. {predicted}")
+                with col2:
+                    st.metric("Your Budget",f"Rs. {totalAmount}")
+                if predicted > totalAmount:
+                    st.error("You may overspend this month!")
                 else:
-                    st.success(f"Predicted: Rs. {predicted} Looking Good!")
+                    st.success(" Looking good — within budget!")
+            fig=predictSpendingGraph(U)
+            if fig:
+                st.pyplot(fig)
             else:
-                st.metric("Predicted Spending",f"Rs. {predicted}")
-        with col2:
-            st.markdown("---")
-            st.markdown("### WishList Target")
+                st.info("Add more expenses to see trend!")
+        with tab2:
             itemName,days=predictWishList(U)
             if itemName is None:
-                st.info("Add item to wishlist first!")
+                st.info("Add items to wishlist first!")
             elif days==0:
-                st.success(f"{itemName} You can afford it now!")
+                st.success(f" {itemName} — You can afford it now!")
             elif days==-1:
-                st.warning(f"{itemName}-Improve your saving rate!")
+                st.warning(f" {itemName} — Improve your saving rate!")
             else:
-                st.info(f"{itemName} You will reach your goal in {days} days!")
-        fig=predictSpendingGraph(U)
-        if fig:
-            st.pyplot(fig)
-        else:
-            st.info("Add more expenses to see spending trend!")
-        st.markdown("---")
-        st.markdown("### Saving Analysis")
-        saved=getSaved(U)
-        budget=getBudget(U)
-        if budget:
-            totalAmount=float(budget[1])
-            savingRate=(saved/totalAmount *100) if totalAmount>0 else 0
-            st.metric("Saving Rate",f"{savingRate:.1f}%")
-            if savingRate>30:
-                st.success("Excellent saving rate!")
-            elif savingRate>10:
-                st.warning("Good But need improvement!")
-            else:
-                st.error("Low saving rate -reduce Expenses")
+                st.info(f" {itemName} — {days} days to go!")
+                wallet=getWallet(U)
+                wishlist=getWishList(U)
+                if wishlist:
+                    wishlist.sort(key=lambda x: int(x[2]))
+                    price=float(wishlist[0][1])
+                    progress=min(wallet/price,1.0)
+                    st.progress(progress)
+                    st.write(f"Saved: Rs. {wallet} / Rs. {price}")
+        with tab3:
+            wallet=float(getWallet(U) or 0)
+            budget=getBudget(U)
+            if budget:
+                totalAmount=float(budget[1])
+                savingRate=(wallet/totalAmount*100) if totalAmount>0 else 0
+                col1,col2,col3=st.columns(3)
+                with col1:
+                    saved=getSaved(U)
+                    st.metric(" Current Saved",f"Rs. {saved}")
+                with col2:
+                    st.metric(" Saving Rate",f"{savingRate:.1f}%")
+                with col3:
+                    st.metric(" Total Wallet",f"Rs. {wallet}")
+                st.markdown("---")
+                if savingRate>30:
+                    st.success(" Excellent saving rate!")
+                elif savingRate>10:
+                    st.warning(" Good — but can improve!")
+                else:
+                    st.error(" Low saving rate!")
     else:
-        U = st.session_state['username']
+        U=st.session_state['username']
         col1,col2=st.columns([3,1])
         with col1:
             st.markdown(f"### Welcome back,{U}!")
@@ -352,19 +419,19 @@ elif 'username' in st.session_state:
         st.markdown("---")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
-            if st.button("Setup"):
+            if st.button("Setup",use_container_width=True):
                 st.session_state['page'] = 'setup'
                 st.rerun()
         with col2:
-            if st.button("Expenses"):
+            if st.button("Expenses",use_container_width=True):
                 st.session_state['page'] = 'expenses'
                 st.rerun()
         with col3:
-            if st.button("Wishlist"):
+            if st.button("Wishlist",use_container_width=True):
                 st.session_state['page'] = 'wishlist'
                 st.rerun()
         with col4:
-            if st.button("Predictions"):
+            if st.button("Predictions",use_container_width=True):
                 st.session_state['page'] = 'predictions'
                 st.rerun()
 
