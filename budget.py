@@ -2,6 +2,11 @@ import hashlib
 from database import supabase
 from datetime import date
 def setBudget(username,days,totalAmount):
+    try:
+        if int(days) <= 0 or float(totalAmount) <= 0:
+            return "Values must be positive!"
+    except:
+        return "Invalid input!"
     existing=supabase.table('budget').select('*').eq('username',username).execute()
     startDate=str(date.today())
     if existing.data:
