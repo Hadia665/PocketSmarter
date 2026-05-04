@@ -224,7 +224,7 @@ elif 'username' in st.session_state:
         st.markdown("## Wish List")
         st.markdown("---")
         U=st.session_state['username']
-        checkandUpdate(U)
+        #checkandUpdate(U)
         col1,col2,col3=st.columns(3)
         with col1:
             itemName=st.text_input("Item Name")
