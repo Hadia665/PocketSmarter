@@ -173,10 +173,15 @@ elif 'username' in st.session_state:
                     TotalDays=st.text_input("Days")
                     TotalAmount=st.text_input("Total Amount")
         if st.button("Save Budget"):
-            setBudget(U,TotalDays,TotalAmount)
-            st.success("Budget Saved!")
-            st.session_state['budget_saved']=True
-            st.rerun()
+            if not TotalDays or not TotalAmount:
+                st.error("Please fill all fields!")
+            elif int(TotalDays) <= 0 or float(TotalAmount) <= 0:
+                st.error("Values must be positive!")
+            else:
+                setBudget(U,TotalDays,TotalAmount)
+                st.success("Budget Saved!")
+                st.session_state['budget_saved']=True
+                st.rerun()
         st.markdown("---")
         st.markdown("### Fixed Expenses")
         if 'expense_list' not in st.session_state:
