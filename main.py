@@ -11,7 +11,7 @@ from database import supabase
 st.set_page_config(page_title="Pocket Smarter", layout="wide")
 st.markdown("""
 <style>.stApp {background-color: #F8F9FA;}
-h1, h2, h3 {color: #2C3E50;}
+h1,h2,h3{color: #2C3E50;}
 .stButton>button {
     background-color: #6C9BCF;
     color: white;
@@ -160,15 +160,15 @@ elif 'username' in st.session_state:
         st.markdown("---")
         col1,col2=st.columns(2)
         with col1:
-            existing = getBudget(U)
+            existing=getBudget(U)
             if existing:
-                TotalDays = st.text_input("Days", value="")
-                TotalAmount = st.text_input("Total Amount", value="")
+                TotalDays=st.text_input("Days",value="")
+                TotalAmount=st.text_input("Total Amount",value="")
             else:
                 existing=getBudget(U)
                 if existing:
-                    TotalDays = st.text_input("Days",values=existing[0])
-                    TotalAmount = st.text_input("Total Amount",value=existing[1])
+                    TotalDays=st.text_input("Days",values=existing[0])
+                    TotalAmount=st.text_input("Total Amount",value=existing[1])
                 else:
                     TotalDays=st.text_input("Days")
                     TotalAmount=st.text_input("Total Amount")
@@ -229,7 +229,6 @@ elif 'username' in st.session_state:
         st.markdown("## Wish List")
         st.markdown("---")
         U=st.session_state['username']
-        #checkandUpdate(U)
         col1,col2,col3=st.columns(3)
         with col1:
             itemName=st.text_input("Item Name")
@@ -273,10 +272,7 @@ elif 'username' in st.session_state:
                 with col2:
                     st.write(f"Rs.{item[1]}")
                 with col3:
-                    newPriority=st.selectbox("P",[1,2,3,4,5],
-                                             index=int(item[2])-1,
-                                             key="p"+item[0]
-                                             )
+                    newPriority=st.selectbox("P",[1,2,3,4,5],index=int(item[2])-1,key="p"+item[0])
                     if newPriority!=int(item[2]):
                         updatePriority(U,item[0],item[1],newPriority)
                         st.rerun()
