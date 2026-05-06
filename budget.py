@@ -3,7 +3,7 @@ from database import supabase
 from datetime import date
 def setBudget(username,days,totalAmount):
     try:
-        if int(days) <= 0 or float(totalAmount) <= 0:
+        if int(days)<=0 or float(totalAmount)<=0:
             return "Values must be positive!"
     except:
         return "Invalid input!"
@@ -39,12 +39,12 @@ def getexpense(username):
         total+=float(row['expense_amount'])
     return total
 def calculateSaved(username):
-    budget = getBudget(username)
+    budget=getBudget(username)
     if budget is None:
         return 0
-    days, totalAmount,startDate = budget
-    totalExpense = getexpense(username)
-    saved = float(totalAmount) - totalExpense
+    days,totalAmount,startDate=budget
+    totalExpense=getexpense(username)
+    saved=float(totalAmount)-totalExpense
     return saved
 def getExpenseList(username):
     result=supabase.table('expenses').select('*').eq('username',username).execute()
